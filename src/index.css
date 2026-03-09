@@ -1,14 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Open+Sans:wght@400;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Bitter", ui-serif, Georgia, serif;
-  
+
   --color-summa-indigo: #20126E;
   --color-summa-white: #FFFFFF;
   --color-summa-gray: #F4F4F4;
   --color-summa-dark: #333333;
-  
+
   --color-summa-blue: #0064B4;
   --color-summa-yellow: #FFC800;
   --color-summa-green: #19E196;
@@ -17,8 +18,6 @@
   --radius-card: clamp(12px, 2vw, 22px);
   --radius-inner: calc(var(--radius-card) * 0.8);
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Open+Sans:wght@400;600&display=swap');
 
 body {
   @apply bg-summa-gray text-summa-dark font-sans antialiased;
