@@ -3,6 +3,8 @@ import { TileContent } from '../types';
 import { ArrowLeft, Info } from 'lucide-react';
 import StandpointButtons from '../components/StandpointButtons';
 import Modal from '../components/Modal';
+import LiveResults from '../components/LiveResults';
+import QRCodePanel from '../components/QRCodePanel';
 
 interface StatementProps {
   tile: TileContent;
@@ -58,8 +60,20 @@ export default function Statement({ tile, onBack }: StatementProps) {
       </div>
 
       {/* Right Panel (1/3) */}
-      <div className="flex-1 h-full bg-summa-gray/30">
-        <StandpointButtons />
+      <div className="flex-1 h-full bg-summa-gray/30 overflow-y-auto">
+        <div className="p-6 space-y-6">
+          <StandpointButtons />
+
+          {tile.classVoting?.enabled && (
+            <>
+              <QRCodePanel statementId={tile.id} />
+
+              {tile.classVoting.liveResults && (
+                <LiveResults statementId={tile.id} />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <Modal 

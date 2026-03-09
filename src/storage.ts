@@ -10,6 +10,12 @@ interface DbTile {
   image: string | null;
   is_visible: boolean;
   display_order: number;
+  class_voting_enabled: boolean;
+  class_voting_live_results: boolean;
+  class_voting_closed: boolean;
+  votes_accept: number;
+  votes_unsure: number;
+  votes_no: number;
 }
 
 const demoData: TileContent[] = [
@@ -76,7 +82,17 @@ const mapDbToTile = (db: DbTile): TileContent => ({
   schoolStandpoint: db.school_standpoint,
   accentColor: db.accent_color as TileContent['accentColor'],
   image: db.image || undefined,
-  isVisible: db.is_visible
+  isVisible: db.is_visible,
+  classVoting: {
+    enabled: db.class_voting_enabled || false,
+    liveResults: db.class_voting_live_results !== false,
+    closed: db.class_voting_closed || false,
+    votes: {
+      accept: db.votes_accept || 0,
+      unsure: db.votes_unsure || 0,
+      no: db.votes_no || 0,
+    }
+  }
 });
 
 const mapTileToDb = (tile: TileContent, displayOrder: number) => ({
@@ -87,7 +103,13 @@ const mapTileToDb = (tile: TileContent, displayOrder: number) => ({
   accent_color: tile.accentColor,
   image: tile.image || null,
   is_visible: tile.isVisible,
-  display_order: displayOrder
+  display_order: displayOrder,
+  class_voting_enabled: tile.classVoting?.enabled || false,
+  class_voting_live_results: tile.classVoting?.liveResults !== false,
+  class_voting_closed: tile.classVoting?.closed || false,
+  votes_accept: tile.classVoting?.votes.accept || 0,
+  votes_unsure: tile.classVoting?.votes.unsure || 0,
+  votes_no: tile.classVoting?.votes.no || 0,
 });
 
 export const getTiles = async (): Promise<TileContent[]> => {

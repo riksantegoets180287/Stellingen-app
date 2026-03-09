@@ -1,6 +1,7 @@
 import React from 'react';
 import { TileContent, AccentColor } from '../types';
-import { X, Upload, Palette } from 'lucide-react';
+import { X, Upload, Palette, RotateCcw } from 'lucide-react';
+import { resetVotes, clearLocalVoteFlags } from '../voting/votingStorage';
 
 interface TileEditorProps {
   tile?: TileContent;
@@ -25,6 +26,12 @@ export default function TileEditor({ tile, onSave, onCancel }: TileEditorProps) 
       accentColor: 'indigo',
       isVisible: true,
       image: '',
+      classVoting: {
+        enabled: false,
+        liveResults: true,
+        closed: false,
+        votes: { accept: 0, unsure: 0, no: 0 }
+      }
     }
   );
 
@@ -58,6 +65,32 @@ export default function TileEditor({ tile, onSave, onCancel }: TileEditorProps) 
         ...formData,
         id: formData.id || crypto.randomUUID(),
       } as TileContent);
+    }
+  };
+
+  const handleResetVotes = async () => {
+    if (!formData.id) return;
+    if (confirm('Weet je zeker dat je alle stemmen wilt resetten?')) {
+      const success = await resetVotes(formData.id);
+      if (success) {
+        setFormData(prev => ({
+          ...prev,
+          classVoting: {
+            ...prev.classVoting!,
+            votes: { accept: 0, unsure: 0, no: 0 }
+          }
+        }));
+        alert('Stemmen zijn gereset.');
+      } else {
+        alert('Er ging iets mis bij het resetten.');
+      }
+    }
+  };
+
+  const handleClearLocalFlags = () => {
+    if (confirm('Weet je zeker dat je de stem-blokkades wilt verwijderen? (alleen dit apparaat)')) {
+      clearLocalVoteFlags(formData.id);
+      alert('Stem-blokkades zijn verwijderd voor dit apparaat.');
     }
   };
 
@@ -173,6 +206,80 @@ export default function TileEditor({ tile, onSave, onCancel }: TileEditorProps) 
               className="w-full p-3 bg-summa-gray rounded-lg border-2 border-transparent focus:border-summa-indigo outline-none resize-none"
             />
             {errors.schoolStandpoint && <p className="text-summa-red text-xs mt-1">{errors.schoolStandpoint}</p>}
+          </div>
+
+          <div className="border-t border-summa-gray pt-6 space-y-4">
+            <h3 className="text-lg font-bold text-summa-indigo uppercase">Klasstemmen via QR</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.classVoting?.enabled || false}
+                  onChange={e => setFormData({
+                    ...formData,
+                    classVoting: {
+                      ...formData.classVoting!,
+                      enabled: e.target.checked
+                    }
+                  })}
+                  className="w-5 h-5 accent-summa-indigo"
+                />
+                <span className="font-bold text-summa-dark/60 uppercase text-sm">Klasstemmen aan</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.classVoting?.liveResults !== false}
+                  onChange={e => setFormData({
+                    ...formData,
+                    classVoting: {
+                      ...formData.classVoting!,
+                      liveResults: e.target.checked
+                    }
+                  })}
+                  className="w-5 h-5 accent-summa-blue"
+                />
+                <span className="font-bold text-summa-dark/60 uppercase text-sm">Live resultaten</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.classVoting?.closed || false}
+                  onChange={e => setFormData({
+                    ...formData,
+                    classVoting: {
+                      ...formData.classVoting!,
+                      closed: e.target.checked
+                    }
+                  })}
+                  className="w-5 h-5 accent-summa-red"
+                />
+                <span className="font-bold text-summa-dark/60 uppercase text-sm">Stemmen gesloten</span>
+              </label>
+            </div>
+
+            {formData.id && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetVotes}
+                  className="flex items-center gap-2 px-4 py-2 bg-summa-red/10 text-summa-red rounded-lg hover:bg-summa-red/20 transition-colors text-sm font-bold"
+                >
+                  <RotateCcw size={16} />
+                  Reset stemmen
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearLocalFlags}
+                  className="flex items-center gap-2 px-4 py-2 bg-summa-yellow/10 text-summa-yellow rounded-lg hover:bg-summa-yellow/20 transition-colors text-sm font-bold"
+                >
+                  Reset stem-blokkades (dit apparaat)
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">

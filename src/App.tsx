@@ -5,9 +5,15 @@ import Home from './pages/Home';
 import Statement from './pages/Statement';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import Vote from './pages/Vote';
 
 export default function App() {
-  const [page, setPage] = React.useState<Page>('home');
+  const [page, setPage] = React.useState<Page>(() => {
+    if (window.location.pathname.startsWith('/vote/')) {
+      return 'vote';
+    }
+    return 'home';
+  });
   const [tiles, setTiles] = React.useState<TileContent[]>([]);
   const [selectedTileId, setSelectedTileId] = React.useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = React.useState(false);
@@ -28,6 +34,19 @@ export default function App() {
       }
     };
     loadData();
+  }, []);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname.startsWith('/vote/')) {
+        setPage('vote');
+      } else {
+        setPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   React.useEffect(() => {
@@ -89,25 +108,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      {page === 'vote' && <Vote />}
+
       {page === 'home' && (
-        <Home 
-          tiles={tiles} 
+        <Home
+          tiles={tiles}
           onSelectTile={(id) => {
             setSelectedTileId(id);
             setPage('statement');
-          }} 
+          }}
         />
       )}
 
       {page === 'statement' && selectedTile && (
-        <Statement 
-          tile={selectedTile} 
-          onBack={() => setPage('home')} 
+        <Statement
+          tile={selectedTile}
+          onBack={() => setPage('home')}
         />
       )}
 
       {page === 'admin-dashboard' && (
-        <AdminDashboard 
+        <AdminDashboard
           tiles={tiles}
           onUpdateTiles={handleUpdateTiles}
           onLogout={handleLogout}
@@ -116,7 +137,7 @@ export default function App() {
       )}
 
       {showAdminLogin && (
-        <AdminLogin 
+        <AdminLogin
           onLogin={handleAdminLogin}
           onCancel={() => setShowAdminLogin(false)}
         />
