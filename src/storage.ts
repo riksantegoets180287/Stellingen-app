@@ -1,6 +1,16 @@
 import { TileContent } from './types';
+import { supabase } from './supabaseClient';
 
-const STORAGE_KEY = 'stellingen_content_v1';
+interface DbTile {
+  id: string;
+  title: string;
+  statement: string;
+  school_standpoint: string;
+  accent_color: string;
+  image: string | null;
+  is_visible: boolean;
+  display_order: number;
+}
 
 const demoData: TileContent[] = [
   {
@@ -59,17 +69,78 @@ const demoData: TileContent[] = [
   }
 ];
 
-export const getTiles = (): TileContent[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoData));
-    return demoData;
+const mapDbToTile = (db: DbTile): TileContent => ({
+  id: db.id,
+  title: db.title,
+  statement: db.statement,
+  schoolStandpoint: db.school_standpoint,
+  accentColor: db.accent_color as TileContent['accentColor'],
+  image: db.image || undefined,
+  isVisible: db.is_visible
+});
+
+const mapTileToDb = (tile: TileContent, displayOrder: number) => ({
+  id: tile.id,
+  title: tile.title,
+  statement: tile.statement,
+  school_standpoint: tile.schoolStandpoint,
+  accent_color: tile.accentColor,
+  image: tile.image || null,
+  is_visible: tile.isVisible,
+  display_order: displayOrder
+});
+
+export const getTiles = async (): Promise<TileContent[]> => {
+  const { data, error } = await supabase
+    .from('stellingen')
+    .select('*')
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching tiles:', error);
+    return [];
   }
-  return JSON.parse(stored);
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  return data.map(mapDbToTile);
 };
 
-export const saveTiles = (tiles: TileContent[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tiles));
+export const saveTiles = async (tiles: TileContent[]): Promise<void> => {
+  const { error: deleteError } = await supabase
+    .from('stellingen')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+
+  if (deleteError) {
+    console.error('Error clearing tiles:', deleteError);
+    throw deleteError;
+  }
+
+  const dbTiles = tiles.map((tile, index) => mapTileToDb(tile, index));
+
+  const { error: insertError } = await supabase
+    .from('stellingen')
+    .insert(dbTiles);
+
+  if (insertError) {
+    console.error('Error saving tiles:', insertError);
+    throw insertError;
+  }
+};
+
+export const initializeDemoData = async (): Promise<void> => {
+  const { data } = await supabase
+    .from('stellingen')
+    .select('id')
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) {
+    await saveTiles(demoData);
+  }
 };
 
 export const isAdminLoggedIn = (): boolean => {

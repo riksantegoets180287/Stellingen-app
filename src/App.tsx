@@ -1,6 +1,6 @@
 import React from 'react';
 import { Page, TileContent } from './types';
-import { getTiles, saveTiles, isAdminLoggedIn, loginAdmin, logoutAdmin } from './storage';
+import { getTiles, saveTiles, isAdminLoggedIn, loginAdmin, logoutAdmin, initializeDemoData } from './storage';
 import Home from './pages/Home';
 import Statement from './pages/Statement';
 import AdminLogin from './pages/AdminLogin';
@@ -11,12 +11,18 @@ export default function App() {
   const [tiles, setTiles] = React.useState<TileContent[]>([]);
   const [selectedTileId, setSelectedTileId] = React.useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = React.useState(false);
-  
-  // Admin trigger logic
+  const [loading, setLoading] = React.useState(true);
+
   const keyPresses = React.useRef<{ key: string; time: number }[]>([]);
 
   React.useEffect(() => {
-    setTiles(getTiles());
+    const loadData = async () => {
+      await initializeDemoData();
+      const data = await getTiles();
+      setTiles(data);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   React.useEffect(() => {
@@ -43,9 +49,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleUpdateTiles = (newTiles: TileContent[]) => {
+  const handleUpdateTiles = async (newTiles: TileContent[]) => {
     setTiles(newTiles);
-    saveTiles(newTiles);
+    await saveTiles(newTiles);
   };
 
   const handleAdminLogin = () => {
@@ -60,6 +66,14 @@ export default function App() {
   };
 
   const selectedTile = tiles.find(t => t.id === selectedTileId);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-summa-dark/60">Laden...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
