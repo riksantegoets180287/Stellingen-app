@@ -56,7 +56,7 @@ export default function TileEditor({ tile, onSave, onCancel }: TileEditorProps) 
     if (validate()) {
       onSave({
         ...formData,
-        id: formData.id || Date.now().toString(),
+        id: formData.id || crypto.randomUUID(),
       } as TileContent);
     }
   };

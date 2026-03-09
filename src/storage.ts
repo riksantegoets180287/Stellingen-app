@@ -165,7 +165,10 @@ export const initializeDemoData = async (): Promise<void> => {
     .maybeSingle();
 
   if (!data) {
+    console.log('No data found, initializing with demo data');
     await saveTiles(demoData);
+  } else {
+    console.log('Database already has data, skipping initialization');
   }
 };
 

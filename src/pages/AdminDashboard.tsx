@@ -37,7 +37,7 @@ export default function AdminDashboard({ tiles, onUpdateTiles, onLogout, onGoToH
   const handleDuplicate = (tile: TileContent) => {
     const newTile = {
       ...tile,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title: `${tile.title} (Kopie)`,
     };
     onUpdateTiles([...tiles, newTile]);
