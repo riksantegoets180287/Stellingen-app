@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileContent } from '../types';
-import { Plus, Edit2, Trash2, Copy, Eye, EyeOff, LogOut, LayoutGrid } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Copy, Eye, EyeOff, LogOut, LayoutGrid } from 'lucide-react';
 import TileEditor from '../admin/TileEditor';
 
 interface AdminDashboardProps {
