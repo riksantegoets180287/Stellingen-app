@@ -109,14 +109,23 @@ export const getTiles = async (): Promise<TileContent[]> => {
 };
 
 export const saveTiles = async (tiles: TileContent[]): Promise<void> => {
-  const { data: existingTiles } = await supabase
+  console.log('Saving tiles:', tiles.length);
+
+  const { data: existingTiles, error: fetchError } = await supabase
     .from('stellingen')
     .select('id');
+
+  if (fetchError) {
+    console.error('Error fetching existing tiles:', fetchError);
+    throw fetchError;
+  }
 
   const existingIds = new Set((existingTiles || []).map(t => t.id));
   const currentIds = new Set(tiles.map(t => t.id));
 
   const tilesToDelete = Array.from(existingIds).filter(id => !currentIds.has(id));
+  console.log('Tiles to delete:', tilesToDelete.length);
+
   if (tilesToDelete.length > 0) {
     const { error: deleteError } = await supabase
       .from('stellingen')
@@ -133,15 +142,19 @@ export const saveTiles = async (tiles: TileContent[]): Promise<void> => {
     const tile = tiles[index];
     const dbTile = mapTileToDb(tile, index);
 
+    console.log(`Upserting tile ${index + 1}/${tiles.length}:`, tile.title);
+
     const { error } = await supabase
       .from('stellingen')
       .upsert(dbTile, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error upserting tile:', error);
+      console.error('Error upserting tile:', tile.title, error);
       throw error;
     }
   }
+
+  console.log('All tiles saved successfully!');
 };
 
 export const initializeDemoData = async (): Promise<void> => {

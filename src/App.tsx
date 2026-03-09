@@ -55,8 +55,15 @@ export default function App() {
   }, []);
 
   const handleUpdateTiles = async (newTiles: TileContent[]) => {
-    setTiles(newTiles);
-    await saveTiles(newTiles);
+    try {
+      console.log('Updating tiles, new count:', newTiles.length);
+      setTiles(newTiles);
+      await saveTiles(newTiles);
+      console.log('Tiles updated successfully');
+    } catch (error) {
+      console.error('Failed to save tiles:', error);
+      alert('Er ging iets mis bij het opslaan. Check de browser console voor meer details.');
+    }
   };
 
   const handleAdminLogin = () => {
