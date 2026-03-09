@@ -17,10 +17,15 @@ export default function App() {
 
   React.useEffect(() => {
     const loadData = async () => {
-      await initializeDemoData();
-      const data = await getTiles();
-      setTiles(data);
-      setLoading(false);
+      try {
+        await initializeDemoData();
+        const data = await getTiles();
+        setTiles(data);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     loadData();
   }, []);
