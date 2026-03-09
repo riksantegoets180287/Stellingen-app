@@ -109,25 +109,38 @@ export const getTiles = async (): Promise<TileContent[]> => {
 };
 
 export const saveTiles = async (tiles: TileContent[]): Promise<void> => {
-  const { error: deleteError } = await supabase
+  const { data: existingTiles } = await supabase
     .from('stellingen')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000');
+    .select('id');
 
-  if (deleteError) {
-    console.error('Error clearing tiles:', deleteError);
-    throw deleteError;
+  const existingIds = new Set((existingTiles || []).map(t => t.id));
+  const currentIds = new Set(tiles.map(t => t.id));
+
+  const tilesToDelete = Array.from(existingIds).filter(id => !currentIds.has(id));
+  if (tilesToDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('stellingen')
+      .delete()
+      .in('id', tilesToDelete);
+
+    if (deleteError) {
+      console.error('Error deleting tiles:', deleteError);
+      throw deleteError;
+    }
   }
 
-  const dbTiles = tiles.map((tile, index) => mapTileToDb(tile, index));
+  for (let index = 0; index < tiles.length; index++) {
+    const tile = tiles[index];
+    const dbTile = mapTileToDb(tile, index);
 
-  const { error: insertError } = await supabase
-    .from('stellingen')
-    .insert(dbTiles);
+    const { error } = await supabase
+      .from('stellingen')
+      .upsert(dbTile, { onConflict: 'id' });
 
-  if (insertError) {
-    console.error('Error saving tiles:', insertError);
-    throw insertError;
+    if (error) {
+      console.error('Error upserting tile:', error);
+      throw error;
+    }
   }
 };
 
